@@ -1,0 +1,3 @@
+#!/bin/sh
+#-g 
+valac --vapidir=../vapi --pkg notmuch -X -lnotmuch notmuch.vala
