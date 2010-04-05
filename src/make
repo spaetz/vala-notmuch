@@ -1,1 +1,2 @@
 #!/bin/sh
+cc -o vnotmuch notmuch.c `pkg-config --cflags --libs gobject-2.0` -lnotmuch
