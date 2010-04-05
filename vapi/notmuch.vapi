@@ -19,6 +19,8 @@
  * Author:
  * 	Sebastian Spaeth <Sebastian@SSpaeth.de>
  */
+using GLib;
+
 [CCode (lower_case_cprefix = "notmuch_", cheader_filename = "notmuch.h")]
 namespace Notmuch {	
 	[CCode (cname = "int", cprefix = "NOTMUCH_STATUS_")]
@@ -41,19 +43,25 @@ namespace Notmuch {
 	[Compact]
 	[CCode (cprefix = "notmuch_database_", cname = "notmuch_database_t",free_function = "notmuch_database_close")]
 	public class Database {
+		[CCode (cname = "notmuch_database_create",
+				has_construct_function = true)]
+		public Database.create (string path);
+		[CCode (cname = "notmuch_database_open",
+				has_construct_function = true)]
+		public Database.open (string path, Mode mode = Database.Mode.READ_ONLY);
 
 		[CCode (cname = "int", cprefix = "NOTMUCH_DATABASE_MODE_")]
 		public enum Mode {
-			READ_ONLY,
+ 			READ_ONLY,
 			READ_WRITE
 		}
 
-		[CCode (cname = "notmuch_database_create", 
-				has_construct_function = false)]
-		public Database.create (string path);
-		[CCode (cname = "notmuch_database_open", 
-				has_construct_function = false)]
-		public Database.open (string path, Mode mode);
+		//[CCode (cname = "notmuch_database_create", 
+		//		has_construct_function = true)]
+		//public create (string path);
+		//[CCode (cname = "notmuch_database_open", 
+		//		has_construct_function = true)]
+		//public open (string path, Mode mode);
 		public void close ();
 		public unowned string get_path ();
         /* Return the database format version of the given database. */
@@ -73,7 +81,7 @@ namespace Notmuch {
 	}
 
 	[Compact]
-	[CCode (cprefix = "notmuch_query_", cname = "notmuch_query_t",free_function = "notmuch_query_destroy")]
+	[CCode (cprefix = "notmuch_query_", cname = "notmuch_query_t",free_function = "")] //notmuch_query_destroy
 	public class Query {
 		[CCode (cname = "notmuch_query_create", 
 				has_construct_function = false)]
@@ -97,7 +105,7 @@ namespace Notmuch {
 	}
 
 	[Compact]
-	[CCode (cprefix = "notmuch_messages_", cname = "notmuch_messages_t",free_function = "notmuch_messages_destroy")]
+	[CCode (cprefix = "notmuch_messages_", cname = "notmuch_messages_t",free_function = "")] //notmuch_messages_destroy
 	public class Messages {
 		public bool valid ();
 		public Message get ();
@@ -108,8 +116,20 @@ namespace Notmuch {
 
 
 	[Compact]
-	[CCode (cprefix = "notmuch_message_", cname = "notmuch_message_t",free_function = "notmuch_message_destroy")]
+	[CCode (cprefix = "notmuch_message_", cname = "notmuch_message_t",free_function = "")] //notmuch_message_destroy
 	public class Message {
+
+		Message() {
+			stdout.printf("in msg constructor");
+			message("creating msg now.");
+		}
+
+		/*Destructor*/
+		~Message() {
+			stdout.printf("in msg destructor");
+			message("Killing msg now.");
+		}
+
 		public unowned string get_message_id ();
 		public unowned string get_thread_id ();
 //notmuch_messages_t * notmuch_message_get_replies (notmuch_message_t *message);
