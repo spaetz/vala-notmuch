@@ -94,47 +94,33 @@ gint _vala_main (char** args, int args_length1);
 
 
 
-#line 17 "notmuch.vala"
 AddressMatcher* address_matcher_construct (GType object_type) {
-#line 100 "notmuch.c"
 	GError * _inner_error_;
 	AddressMatcher* self;
 	GKeyFile* config;
 	char* home;
 	_inner_error_ = NULL;
 	self = (AddressMatcher*) g_type_create_instance (object_type);
-#line 20 "notmuch.vala"
 	config = g_key_file_new ();
-#line 22 "notmuch.vala"
 	home = g_strdup (g_getenv ("NOTMUCH_CONFIG"));
-#line 23 "notmuch.vala"
 	if (home == NULL) {
-#line 113 "notmuch.c"
 		char* _tmp0_;
-#line 24 "notmuch.vala"
 		home = (_tmp0_ = g_strdup (g_get_home_dir ()), _g_free0 (home), _tmp0_);
-#line 117 "notmuch.c"
 	}
 	{
 		char* _tmp1_;
 		char* _tmp2_;
 		char* _tmp3_;
-#line 27 "notmuch.vala"
 		g_key_file_load_from_file (config, _tmp1_ = g_strconcat (home, "/.notmuch-config", NULL), G_KEY_FILE_NONE, &_inner_error_);
-#line 125 "notmuch.c"
 		_g_free0 (_tmp1_);
 		if (_inner_error_ != NULL) {
 			goto __catch0_g_error;
 		}
-#line 28 "notmuch.vala"
 		_tmp2_ = g_key_file_get_string (config, "database", "path", &_inner_error_);
-#line 132 "notmuch.c"
 		if (_inner_error_ != NULL) {
 			goto __catch0_g_error;
 		}
-#line 28 "notmuch.vala"
 		self->priv->user_db_path = (_tmp3_ = _tmp2_, _g_free0 (self->priv->user_db_path), _tmp3_);
-#line 138 "notmuch.c"
 	}
 	goto __finally0;
 	__catch0_g_error:
@@ -157,15 +143,11 @@ AddressMatcher* address_matcher_construct (GType object_type) {
 	{
 		char* _tmp4_;
 		char* _tmp5_;
-#line 31 "notmuch.vala"
 		_tmp4_ = g_key_file_get_string (config, "user", "primary_email", &_inner_error_);
-#line 163 "notmuch.c"
 		if (_inner_error_ != NULL) {
 			goto __catch1_g_error;
 		}
-#line 31 "notmuch.vala"
 		self->priv->user_primary_email = (_tmp5_ = _tmp4_, _g_free0 (self->priv->user_primary_email), _tmp5_);
-#line 169 "notmuch.c"
 	}
 	goto __finally1;
 	__catch1_g_error:
@@ -191,59 +173,36 @@ AddressMatcher* address_matcher_construct (GType object_type) {
 }
 
 
-#line 17 "notmuch.vala"
 AddressMatcher* address_matcher_new (void) {
-#line 17 "notmuch.vala"
 	return address_matcher_construct (TYPE_ADDRESS_MATCHER);
-#line 199 "notmuch.c"
 }
 
 
-#line 37 "notmuch.vala"
 static gint address_matcher_revsort_by_freq (AddressMatcherMailAddress_freq* mail1, AddressMatcherMailAddress_freq* mail2) {
-#line 205 "notmuch.c"
 	gint result = 0;
-#line 39 "notmuch.vala"
 	if ((*mail1).occurances < (*mail2).occurances) {
-#line 209 "notmuch.c"
 		result = 1;
-#line 39 "notmuch.vala"
 		return result;
-#line 213 "notmuch.c"
 	} else {
-#line 40 "notmuch.vala"
 		if ((*mail1).occurances > (*mail2).occurances) {
-#line 217 "notmuch.c"
 			result = -1;
-#line 40 "notmuch.vala"
 			return result;
-#line 221 "notmuch.c"
 		} else {
 			result = 0;
-#line 41 "notmuch.vala"
 			return result;
-#line 226 "notmuch.c"
 		}
 	}
 }
 
 
-#line 922 "glib-2.0.vapi"
 static char* string_strip (const char* self) {
-#line 234 "notmuch.c"
 	char* result = NULL;
 	char* _result_;
-#line 922 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 923 "glib-2.0.vapi"
 	_result_ = g_strdup (self);
-#line 924 "glib-2.0.vapi"
 	g_strstrip (_result_);
-#line 243 "notmuch.c"
 	result = _result_;
-#line 925 "glib-2.0.vapi"
 	return result;
-#line 247 "notmuch.c"
 }
 
 
@@ -258,9 +217,7 @@ static void _g_slist_free_address_matcher_mailaddress_freq_free (GSList* self) {
 }
 
 
-#line 44 "notmuch.vala"
 void address_matcher_run (AddressMatcher* self, const char* name) {
-#line 264 "notmuch.c"
 	GError * _inner_error_;
 	notmuch_database_t* _tmp0_;
 	GString* querystr;
@@ -269,51 +226,31 @@ void address_matcher_run (AddressMatcher* self, const char* name) {
 	GHashTable* ht;
 	GRegex* re;
 	GSList* addrs;
-#line 44 "notmuch.vala"
 	g_return_if_fail (self != NULL);
-#line 275 "notmuch.c"
 	_inner_error_ = NULL;
-#line 46 "notmuch.vala"
 	self->priv->db = (_tmp0_ = notmuch_database_open (self->priv->user_db_path, NOTMUCH_DATABASE_MODE_READ_ONLY), _notmuch_database_close0 (self->priv->db), _tmp0_);
-#line 47 "notmuch.vala"
 	querystr = g_string_new ("");
-#line 48 "notmuch.vala"
 	if (name != NULL) {
-#line 283 "notmuch.c"
 		char* _tmp2_;
 		char* _tmp1_;
-#line 49 "notmuch.vala"
 		g_string_append (querystr, _tmp2_ = g_strconcat (_tmp1_ = g_strconcat ("to:", name, NULL), "*", NULL));
-#line 288 "notmuch.c"
 		_g_free0 (_tmp2_);
 		_g_free0 (_tmp1_);
 	}
-#line 50 "notmuch.vala"
 	if (self->priv->user_primary_email != NULL) {
-#line 294 "notmuch.c"
 		char* _tmp3_;
-#line 51 "notmuch.vala"
 		g_string_append (querystr, _tmp3_ = g_strconcat (" from:", self->priv->user_primary_email, NULL));
-#line 298 "notmuch.c"
 		_g_free0 (_tmp3_);
 	}
-#line 52 "notmuch.vala"
 	g_debug ("notmuch.vala:52: %s", querystr->str);
-#line 53 "notmuch.vala"
 	q = notmuch_query_create (self->priv->db, querystr->str);
-#line 54 "notmuch.vala"
 	msgs = notmuch_query_search_messages (q);
-#line 57 "notmuch.vala"
 	ht = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
-#line 59 "notmuch.vala"
 	re = NULL;
-#line 311 "notmuch.c"
 	{
 		GRegex* _tmp4_;
 		GRegex* _tmp5_;
-#line 63 "notmuch.vala"
 		_tmp4_ = g_regex_new ("\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b", G_REGEX_UNGREEDY, 0, &_inner_error_);
-#line 317 "notmuch.c"
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
 				goto __catch2_g_regex_error;
@@ -327,9 +264,7 @@ void address_matcher_run (AddressMatcher* self, const char* name) {
 			g_clear_error (&_inner_error_);
 			return;
 		}
-#line 63 "notmuch.vala"
 		re = (_tmp5_ = _tmp4_, _g_regex_unref0 (re), _tmp5_);
-#line 333 "notmuch.c"
 	}
 	goto __finally2;
 	__catch2_g_regex_error:
@@ -352,9 +287,7 @@ void address_matcher_run (AddressMatcher* self, const char* name) {
 		g_clear_error (&_inner_error_);
 		return;
 	}
-#line 67 "notmuch.vala"
 	while (TRUE) {
-#line 358 "notmuch.c"
 		GMatchInfo* matches;
 		notmuch_message_t* msg;
 		char* froms;
@@ -362,50 +295,30 @@ void address_matcher_run (AddressMatcher* self, const char* name) {
 		gboolean _tmp7_;
 		GMatchInfo* _tmp6_ = NULL;
 		gboolean found;
-#line 67 "notmuch.vala"
 		if (!notmuch_messages_valid (msgs)) {
-#line 67 "notmuch.vala"
 			break;
-#line 370 "notmuch.c"
 		}
 		matches = NULL;
-#line 69 "notmuch.vala"
 		msg = notmuch_messages_get (msgs);
-#line 70 "notmuch.vala"
 		froms = g_strdup ((const char*) notmuch_message_get_header (msg, "to"));
-#line 71 "notmuch.vala"
 		found = (_tmp7_ = g_regex_match (re, froms, 0, &_tmp6_), matches = (_tmp8_ = _tmp6_, _g_match_info_free0 (matches), _tmp8_), _tmp7_);
-#line 72 "notmuch.vala"
 		while (TRUE) {
-#line 381 "notmuch.c"
 			char* from;
 			char* _tmp9_;
 			char* _tmp10_;
 			guint occurs;
-#line 72 "notmuch.vala"
 			if (!found) {
-#line 72 "notmuch.vala"
 				break;
-#line 390 "notmuch.c"
 			}
-#line 73 "notmuch.vala"
 			from = g_match_info_fetch (matches, 0);
-#line 74 "notmuch.vala"
 			_tmp9_ = string_strip (from);
-#line 396 "notmuch.c"
 			_g_free0 (_tmp9_);
-#line 75 "notmuch.vala"
 			from = (_tmp10_ = g_utf8_strdown (from, -1), _g_free0 (from), _tmp10_);
-#line 76 "notmuch.vala"
 			occurs = GPOINTER_TO_UINT (g_hash_table_lookup (ht, from)) + 1;
-#line 77 "notmuch.vala"
 			g_hash_table_replace (ht, g_strdup (from), GUINT_TO_POINTER (occurs));
-#line 404 "notmuch.c"
 			{
 				gboolean _tmp11_;
-#line 78 "notmuch.vala"
 				_tmp11_ = g_match_info_next (matches, &_inner_error_);
-#line 409 "notmuch.c"
 				if (_inner_error_ != NULL) {
 					if (_inner_error_->domain == G_REGEX_ERROR) {
 						goto __catch3_g_regex_error;
@@ -423,9 +336,7 @@ void address_matcher_run (AddressMatcher* self, const char* name) {
 					g_clear_error (&_inner_error_);
 					return;
 				}
-#line 78 "notmuch.vala"
 				found = _tmp11_;
-#line 429 "notmuch.c"
 			}
 			goto __finally3;
 			__catch3_g_regex_error:
@@ -454,65 +365,42 @@ void address_matcher_run (AddressMatcher* self, const char* name) {
 			}
 			_g_free0 (from);
 		}
-#line 81 "notmuch.vala"
 		notmuch_message_destroy (msg);
-#line 82 "notmuch.vala"
 		notmuch_messages_move_to_next (msgs);
-#line 462 "notmuch.c"
 		_g_match_info_free0 (matches);
 		_0 (msg);
 		_g_free0 (froms);
 	}
-#line 86 "notmuch.vala"
 	addrs = NULL;
-#line 469 "notmuch.c"
 	{
 		GList* addr_collection;
 		GList* addr_it;
-#line 87 "notmuch.vala"
 		addr_collection = g_hash_table_get_keys (ht);
-#line 475 "notmuch.c"
 		for (addr_it = addr_collection; addr_it != NULL; addr_it = addr_it->next) {
 			const char* addr;
-#line 87 "notmuch.vala"
 			addr = (const char*) addr_it->data;
-#line 480 "notmuch.c"
 			{
 				AddressMatcherMailAddress_freq _tmp12_ = {0};
 				AddressMatcherMailAddress_freq mail;
-#line 88 "notmuch.vala"
 				mail = (_tmp12_.address = g_strdup (addr), _tmp12_.occurances = GPOINTER_TO_UINT (g_hash_table_lookup (ht, addr)), _tmp12_);
-#line 89 "notmuch.vala"
 				addrs = g_slist_prepend (addrs, _address_matcher_mailaddress_freq_dup0 (&mail));
-#line 488 "notmuch.c"
 				address_matcher_mailaddress_freq_destroy (&mail);
 			}
 		}
-#line 87 "notmuch.vala"
 		_g_list_free0 (addr_collection);
-#line 494 "notmuch.c"
 	}
-#line 93 "notmuch.vala"
 	addrs = g_slist_sort (addrs, (GCompareFunc) address_matcher_revsort_by_freq);
-#line 498 "notmuch.c"
 	{
 		GSList* a_collection;
 		GSList* a_it;
-#line 96 "notmuch.vala"
 		a_collection = addrs;
-#line 504 "notmuch.c"
 		for (a_it = a_collection; a_it != NULL; a_it = a_it->next) {
 			AddressMatcherMailAddress_freq* a;
-#line 96 "notmuch.vala"
 			a = _address_matcher_mailaddress_freq_dup0 ((AddressMatcherMailAddress_freq*) a_it->data);
-#line 509 "notmuch.c"
 			{
 				char* from;
-#line 97 "notmuch.vala"
 				from = g_strdup ((*a).address);
-#line 98 "notmuch.vala"
 				fprintf (stdout, "%s %d\n", from, (gint) (*a).occurances);
-#line 516 "notmuch.c"
 				_address_matcher_mailaddress_freq_free0 (a);
 				_g_free0 (from);
 			}
@@ -729,31 +617,20 @@ void address_matcher_unref (gpointer instance) {
 }
 
 
-#line 103 "notmuch.vala"
 gint _vala_main (char** args, int args_length1) {
-#line 735 "notmuch.c"
 	gint result = 0;
 	AddressMatcher* app;
-#line 104 "notmuch.vala"
 	app = address_matcher_new ();
-#line 105 "notmuch.vala"
 	address_matcher_run (app, args[1]);
-#line 742 "notmuch.c"
 	result = 0;
 	_address_matcher_unref0 (app);
-#line 106 "notmuch.vala"
 	return result;
-#line 747 "notmuch.c"
 }
 
 
-#line 103 "notmuch.vala"
 int main (int argc, char ** argv) {
-#line 103 "notmuch.vala"
 	g_type_init ();
-#line 103 "notmuch.vala"
 	return _vala_main (argv, argc);
-#line 757 "notmuch.c"
 }
 
 
