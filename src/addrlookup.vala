@@ -80,10 +80,18 @@ class AddressMatcher {
 				var from = matches.fetch(0);
 				from.strip();
 				from = from.down();
-				uint occurs = ht.lookup(from) +1 ;
-				ht.replace(from, occurs);
+				/* not all fetched addresses fit our search criteria,
+				*  so only use those that do, ie
+				*  'name' is contained in real name <email@address> */
 				try { found = matches.next(); }
 				catch (RegexError ex) {}
+				var is_match =  Regex.match_simple (name, 
+													from,
+													RegexCompileFlags.CASELESS);
+				if (!is_match) continue;
+
+				uint occurs = ht.lookup(from) +1 ;
+				ht.replace(from, occurs);
 			}
 			msg.destroy(); //get 'too many files open' if we don't destroy
 			msgs.move_to_next();
