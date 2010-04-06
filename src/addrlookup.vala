@@ -32,13 +32,21 @@ class AddressMatcher {
 		} catch (Error ex) {}
 	}
 
-	/* This function is used to sort the email addresses from most to 
-	   least used */
-	private static int revsort_by_freq(MailAddress_freq* mail1, 
+	/* Used to sort the email addresses from most to least used */
+	/*private static int revsort_by_freq(MailAddress_freq* mail1, 
 									   MailAddress_freq* mail2){
-		if (mail1->occurances < mail2->occurances) { return 1; }
-		else if (mail1->occurances > mail2->occurances) { return -1; } 
-		else { return 0; /*equal*/ }
+		if (mail1->occurances == mail2->occurances) return 0;
+		else if (mail1->occurances > mail2->occurances) return -1;
+		else return 1;
+
+		}*/
+
+	/* Used to sort the email addresses from least to most used */
+	private static int sort_by_freq(MailAddress_freq* mail1, 
+									MailAddress_freq* mail2){
+		if (mail1->occurances == mail2->occurances) return 0;
+		else if (mail1->occurances > mail2->occurances) return 1;
+		else return -1;
 	}
 
 	public void run(string? name) {
@@ -49,7 +57,6 @@ class AddressMatcher {
 			querystr.append("to:"+name+"*");
 		if (this.user_primary_email != null)
 			querystr.append(" from:" + this.user_primary_email);
-		debug(querystr.str);
 		var q = new Query.create(db, querystr.str);
 		var msgs = q.search_messages();
 
@@ -89,13 +96,13 @@ class AddressMatcher {
 			addrs.prepend(mail);
 		}
 
-		/* Sort addresses by frequency */
-		addrs.sort((GLib.CompareFunc)revsort_by_freq);
+		/* Sort addresses by frequency (least-to-most */
+		addrs.sort((GLib.CompareFunc)sort_by_freq);
 
 		/* output mail addresses according to popularity*/
 		foreach (var a in addrs) {
 			var from = a.address;
-			stdout.printf("%s %d\n",from, (int)a.occurances);
+			stdout.printf("%s\n",from);
 		}
 	}
 } /*End of class AddressMatcher*/
