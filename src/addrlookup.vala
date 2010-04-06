@@ -55,6 +55,9 @@ class AddressMatcher {
 		var querystr = new StringBuilder ();
 		if (name != null)
 			querystr.append("to:"+name+"*");
+		else
+			/* set name to empty string if undefined */
+			name = "";
 		if (this.user_primary_email != null)
 			querystr.append(" from:" + this.user_primary_email);
 		var q = new Query.create(db, querystr.str);
@@ -62,12 +65,18 @@ class AddressMatcher {
 
 		/* hashtable with mail address (hash) and number of occurances */
 		var ht = new HashTable<string,uint>.full(GLib.str_hash, str_equal, 
-												 g_free, null);
+												 null, null);
+		/* Hashtable pointing from lower case email addresses to a
+		 * HashTable with "real name + email address" ->
+		 * occurances. The key strings are allocated by the Hashtable
+		 * 'ht' and will be freed when that is destroyed. */
+		var addr2realname = new HashTable<string,HashTable>.full(
+			GLib.str_hash, str_equal, g_free, g_free);
+
 		Regex re = null;
 		//regex from http://regexlib.com/DisplayPatterns.aspx
-		
 		try {
-			re = new Regex("\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b",RegexCompileFlags.UNGREEDY);
+			re = new Regex("[^,]*<?(\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b)>?"); //,RegexCompileFlags.UNGREEDY);
 		} catch (GLib.RegexError ex) { }
 
 		/* fill the hashtable */
@@ -78,20 +87,45 @@ class AddressMatcher {
 			var found = re.match(froms, 0, out matches);
 			while (found) {
 				var from = matches.fetch(0);
+				var addr = matches.fetch(1);
 				from.strip();
-				from = from.down();
+				addr = addr.down();
+				
+				/* forward to next email address for the next while loop */
+				try { found = matches.next(); }
+				catch (RegexError ex) {}
+
 				/* not all fetched addresses fit our search criteria,
 				*  so only use those that do, ie
 				*  'name' is contained in real name <email@address> */
-				try { found = matches.next(); }
-				catch (RegexError ex) {}
 				var is_match =  Regex.match_simple (name, 
 													from,
 													RegexCompileFlags.CASELESS);
 				if (!is_match) continue;
 
-				uint occurs = ht.lookup(from) +1 ;
-				ht.replace(from, occurs);
+				/* increase ht value by one for the lower case email */
+				uint occurs = ht.lookup(addr) +1 ;
+				ht.replace(addr, occurs);
+
+				//XXX DEBUG:
+				stdout.printf("X: %s Y:%s\n",from, addr);
+				HashTable<string,uint> realname_freq = 
+					addr2realname.lookup(addr);
+				if (realname_freq == null) {
+					/* Create a new hashtable to insert */
+					realname_freq = new HashTable<string,uint>.full(
+						GLib.str_hash, str_equal, null, null);
+					addr2realname.insert(addr, realname_freq);
+				}
+				occurs = realname_freq.lookup(from) +1;
+				realname_freq.replace(from, occurs);
+				stdout.printf("Z: %u",realname_freq.lookup(from));
+				//foreach (var key in realname_freq.get_keys()) {
+				//	var freq = (HashTable<string,uint>)realname_freq.lookup(addr);
+				//	message("%s %d", from, key);
+				//}
+//								
+
 			}
 			msg.destroy(); //get 'too many files open' if we don't destroy
 			msgs.move_to_next();
@@ -99,6 +133,7 @@ class AddressMatcher {
 
 		/* SList with unique addresses which will be sorted after occurences*/
 		var addrs = new SList<MailAddress_freq?>();
+
 		foreach (var addr in ht.get_keys()) {
 			MailAddress_freq mail = { addr, ht.lookup(addr) };
 			addrs.prepend(mail);
