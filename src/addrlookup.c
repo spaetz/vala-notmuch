@@ -200,6 +200,15 @@ static gint address_matcher_sort_by_freq (AddressMatcherMailAddress_freq* mail1,
 }
 
 
+static gboolean string_contains (const char* self, const char* needle) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	g_return_val_if_fail (needle != NULL, FALSE);
+	result = strstr (self, needle) != NULL;
+	return result;
+}
+
+
 char* address_matcher_frequent_fullname (AddressMatcher* self, GHashTable* frequencies) {
 	char* result = NULL;
 	guint maxfreq;
@@ -217,11 +226,23 @@ char* address_matcher_frequent_fullname (AddressMatcher* self, GHashTable* frequ
 			mail = (const char*) mail_it->data;
 			{
 				guint freq;
+				gboolean _tmp0_ = FALSE;
+				gboolean _tmp1_ = FALSE;
 				freq = GPOINTER_TO_UINT (g_hash_table_lookup (frequencies, mail));
 				if (freq > maxfreq) {
-					char* _tmp0_;
+					_tmp1_ = string_contains (mail, " ");
+				} else {
+					_tmp1_ = FALSE;
+				}
+				if (_tmp1_) {
+					_tmp0_ = TRUE;
+				} else {
+					_tmp0_ = g_hash_table_size (frequencies) == 1;
+				}
+				if (_tmp0_) {
+					char* _tmp2_;
 					maxfreq = freq;
-					fullname = (_tmp0_ = g_strdup (mail), _g_free0 (fullname), _tmp0_);
+					fullname = (_tmp2_ = g_strdup (mail), _g_free0 (fullname), _tmp2_);
 				}
 			}
 		}
@@ -268,8 +289,13 @@ char** address_matcher_addresses_by_frequency (AddressMatcher* self, notmuch_mes
 	GHashTable* ht;
 	GHashTable* addr2realname;
 	GRegex* re;
+	char** _tmp4_;
+	gint _headers_size_;
+	gint headers_length1;
+	char** _tmp3_ = NULL;
+	char** headers;
 	GSList* addrs;
-	char** _tmp12_;
+	char** _tmp14_;
 	g_return_val_if_fail (self != NULL, NULL);
 	g_return_val_if_fail (msgs != NULL, NULL);
 	g_return_val_if_fail (name != NULL, NULL);
@@ -317,108 +343,127 @@ char** address_matcher_addresses_by_frequency (AddressMatcher* self, notmuch_mes
 		g_clear_error (&_inner_error_);
 		return NULL;
 	}
+	headers = (_tmp4_ = (_tmp3_ = g_new0 (char*, 4 + 1), _tmp3_[0] = g_strdup ("from"), _tmp3_[1] = g_strdup ("to"), _tmp3_[2] = g_strdup ("cc"), _tmp3_[3] = g_strdup ("bcc"), _tmp3_), headers_length1 = 4, _headers_size_ = headers_length1, _tmp4_);
 	while (TRUE) {
 		GMatchInfo* matches;
 		notmuch_message_t* msg;
-		char* froms;
-		GMatchInfo* _tmp5_;
-		gboolean _tmp4_;
-		GMatchInfo* _tmp3_ = NULL;
-		gboolean found;
 		if (!notmuch_messages_valid (msgs)) {
 			break;
 		}
 		matches = NULL;
 		msg = notmuch_messages_get (msgs);
-		froms = g_strdup ((const char*) notmuch_message_get_header (msg, "to"));
-		found = (_tmp4_ = g_regex_match (re, froms, 0, &_tmp3_), matches = (_tmp5_ = _tmp3_, _g_match_info_free0 (matches), _tmp5_), _tmp4_);
-		while (TRUE) {
-			char* from;
-			char* addr;
-			char* _tmp6_;
-			char* _tmp8_;
-			gboolean _tmp9_;
-			gboolean is_match;
-			guint occurs;
-			GHashTable* realname_freq;
-			if (!found) {
-				break;
-			}
-			from = g_match_info_fetch (matches, 1);
-			addr = g_match_info_fetch (matches, 2);
-			addr = (_tmp6_ = g_utf8_strdown (addr, -1), _g_free0 (addr), _tmp6_);
-			{
-				gboolean _tmp7_;
-				_tmp7_ = g_match_info_next (matches, &_inner_error_);
-				if (_inner_error_ != NULL) {
-					if (_inner_error_->domain == G_REGEX_ERROR) {
-						goto __catch3_g_regex_error;
-					}
-					_g_free0 (from);
-					_g_free0 (addr);
-					_g_match_info_free0 (matches);
-					_0 (msg);
-					_g_free0 (froms);
-					return_value = (_vala_array_free (return_value, return_value_length1, (GDestroyNotify) g_free), NULL);
-					_g_hash_table_unref0 (ht);
-					_g_hash_table_unref0 (addr2realname);
-					_g_regex_unref0 (re);
-					g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-					g_clear_error (&_inner_error_);
-					return NULL;
-				}
-				found = _tmp7_;
-			}
-			goto __finally3;
-			__catch3_g_regex_error:
-			{
-				GError * ex;
-				ex = _inner_error_;
-				_inner_error_ = NULL;
+		{
+			char** header_collection;
+			int header_collection_length1;
+			int header_it;
+			header_collection = headers;
+			header_collection_length1 = headers_length1;
+			for (header_it = 0; header_it < headers_length1; header_it = header_it + 1) {
+				char* header;
+				header = g_strdup (header_collection[header_it]);
 				{
-					_g_error_free0 (ex);
+					char* froms;
+					GMatchInfo* _tmp7_;
+					gboolean _tmp6_;
+					GMatchInfo* _tmp5_ = NULL;
+					gboolean found;
+					froms = g_strdup ((const char*) notmuch_message_get_header (msg, header));
+					found = (_tmp6_ = g_regex_match (re, froms, 0, &_tmp5_), matches = (_tmp7_ = _tmp5_, _g_match_info_free0 (matches), _tmp7_), _tmp6_);
+					while (TRUE) {
+						char* from;
+						char* addr;
+						char* _tmp8_;
+						char* _tmp10_;
+						gboolean _tmp11_;
+						gboolean is_match;
+						guint occurs;
+						GHashTable* realname_freq;
+						if (!found) {
+							break;
+						}
+						from = g_match_info_fetch (matches, 1);
+						addr = g_match_info_fetch (matches, 2);
+						addr = (_tmp8_ = g_utf8_strdown (addr, -1), _g_free0 (addr), _tmp8_);
+						{
+							gboolean _tmp9_;
+							_tmp9_ = g_match_info_next (matches, &_inner_error_);
+							if (_inner_error_ != NULL) {
+								if (_inner_error_->domain == G_REGEX_ERROR) {
+									goto __catch3_g_regex_error;
+								}
+								_g_free0 (from);
+								_g_free0 (addr);
+								_g_free0 (header);
+								_g_free0 (froms);
+								_g_match_info_free0 (matches);
+								_0 (msg);
+								return_value = (_vala_array_free (return_value, return_value_length1, (GDestroyNotify) g_free), NULL);
+								_g_hash_table_unref0 (ht);
+								_g_hash_table_unref0 (addr2realname);
+								_g_regex_unref0 (re);
+								headers = (_vala_array_free (headers, headers_length1, (GDestroyNotify) g_free), NULL);
+								g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+								g_clear_error (&_inner_error_);
+								return NULL;
+							}
+							found = _tmp9_;
+						}
+						goto __finally3;
+						__catch3_g_regex_error:
+						{
+							GError * ex;
+							ex = _inner_error_;
+							_inner_error_ = NULL;
+							{
+								_g_error_free0 (ex);
+							}
+						}
+						__finally3:
+						if (_inner_error_ != NULL) {
+							_g_free0 (from);
+							_g_free0 (addr);
+							_g_free0 (header);
+							_g_free0 (froms);
+							_g_match_info_free0 (matches);
+							_0 (msg);
+							return_value = (_vala_array_free (return_value, return_value_length1, (GDestroyNotify) g_free), NULL);
+							_g_hash_table_unref0 (ht);
+							_g_hash_table_unref0 (addr2realname);
+							_g_regex_unref0 (re);
+							headers = (_vala_array_free (headers, headers_length1, (GDestroyNotify) g_free), NULL);
+							g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+							g_clear_error (&_inner_error_);
+							return NULL;
+						}
+						is_match = (_tmp11_ = g_regex_match_simple (_tmp10_ = g_strconcat ("\\b", name, NULL), from, G_REGEX_CASELESS, 0), _g_free0 (_tmp10_), _tmp11_);
+						if (!is_match) {
+							_g_free0 (from);
+							_g_free0 (addr);
+							continue;
+						}
+						occurs = GPOINTER_TO_UINT (g_hash_table_lookup (ht, addr)) + 1;
+						g_hash_table_replace (ht, g_strdup (addr), GUINT_TO_POINTER (occurs));
+						realname_freq = _g_hash_table_ref0 ((GHashTable*) g_hash_table_lookup (addr2realname, addr));
+						if (realname_freq == NULL) {
+							GHashTable* _tmp12_;
+							realname_freq = (_tmp12_ = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, NULL), _g_hash_table_unref0 (realname_freq), _tmp12_);
+							g_hash_table_insert (addr2realname, g_strdup (addr), _g_hash_table_ref0 (realname_freq));
+						}
+						occurs = GPOINTER_TO_UINT (g_hash_table_lookup (realname_freq, from)) + 1;
+						g_hash_table_replace (realname_freq, g_strdup (from), GUINT_TO_POINTER (occurs));
+						_g_free0 (from);
+						_g_free0 (addr);
+						_g_hash_table_unref0 (realname_freq);
+					}
+					_g_free0 (header);
+					_g_free0 (froms);
 				}
 			}
-			__finally3:
-			if (_inner_error_ != NULL) {
-				_g_free0 (from);
-				_g_free0 (addr);
-				_g_match_info_free0 (matches);
-				_0 (msg);
-				_g_free0 (froms);
-				return_value = (_vala_array_free (return_value, return_value_length1, (GDestroyNotify) g_free), NULL);
-				_g_hash_table_unref0 (ht);
-				_g_hash_table_unref0 (addr2realname);
-				_g_regex_unref0 (re);
-				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-				g_clear_error (&_inner_error_);
-				return NULL;
-			}
-			is_match = (_tmp9_ = g_regex_match_simple (_tmp8_ = g_strconcat ("\\b", name, NULL), from, G_REGEX_CASELESS, 0), _g_free0 (_tmp8_), _tmp9_);
-			if (!is_match) {
-				_g_free0 (from);
-				_g_free0 (addr);
-				continue;
-			}
-			occurs = GPOINTER_TO_UINT (g_hash_table_lookup (ht, addr)) + 1;
-			g_hash_table_replace (ht, g_strdup (addr), GUINT_TO_POINTER (occurs));
-			realname_freq = _g_hash_table_ref0 ((GHashTable*) g_hash_table_lookup (addr2realname, addr));
-			if (realname_freq == NULL) {
-				GHashTable* _tmp10_;
-				realname_freq = (_tmp10_ = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, NULL), _g_hash_table_unref0 (realname_freq), _tmp10_);
-				g_hash_table_insert (addr2realname, g_strdup (addr), _g_hash_table_ref0 (realname_freq));
-			}
-			occurs = GPOINTER_TO_UINT (g_hash_table_lookup (realname_freq, from)) + 1;
-			g_hash_table_replace (realname_freq, g_strdup (from), GUINT_TO_POINTER (occurs));
-			_g_free0 (from);
-			_g_free0 (addr);
-			_g_hash_table_unref0 (realname_freq);
 		}
 		notmuch_message_destroy (msg);
 		notmuch_messages_move_to_next (msgs);
 		_g_match_info_free0 (matches);
 		_0 (msg);
-		_g_free0 (froms);
 	}
 	addrs = NULL;
 	{
@@ -429,9 +474,9 @@ char** address_matcher_addresses_by_frequency (AddressMatcher* self, notmuch_mes
 			const char* addr;
 			addr = (const char*) addr_it->data;
 			{
-				AddressMatcherMailAddress_freq _tmp11_ = {0};
+				AddressMatcherMailAddress_freq _tmp13_ = {0};
 				AddressMatcherMailAddress_freq mail;
-				mail = (_tmp11_.address = g_strdup (addr), _tmp11_.occurances = GPOINTER_TO_UINT (g_hash_table_lookup (ht, addr)), _tmp11_);
+				mail = (_tmp13_.address = g_strdup (addr), _tmp13_.occurances = GPOINTER_TO_UINT (g_hash_table_lookup (ht, addr)), _tmp13_);
 				addrs = g_slist_prepend (addrs, _address_matcher_mailaddress_freq_dup0 (&mail));
 				address_matcher_mailaddress_freq_destroy (&mail);
 			}
@@ -455,16 +500,18 @@ char** address_matcher_addresses_by_frequency (AddressMatcher* self, notmuch_mes
 			}
 		}
 	}
-	result = (_tmp12_ = return_value, *result_length1 = return_value_length1, _tmp12_);
+	result = (_tmp14_ = return_value, *result_length1 = return_value_length1, _tmp14_);
 	_g_hash_table_unref0 (ht);
 	_g_hash_table_unref0 (addr2realname);
 	_g_regex_unref0 (re);
+	headers = (_vala_array_free (headers, headers_length1, (GDestroyNotify) g_free), NULL);
 	__g_slist_free_address_matcher_mailaddress_freq_free0 (addrs);
 	return result;
 	return_value = (_vala_array_free (return_value, return_value_length1, (GDestroyNotify) g_free), NULL);
 	_g_hash_table_unref0 (ht);
 	_g_hash_table_unref0 (addr2realname);
 	_g_regex_unref0 (re);
+	headers = (_vala_array_free (headers, headers_length1, (GDestroyNotify) g_free), NULL);
 	__g_slist_free_address_matcher_mailaddress_freq_free0 (addrs);
 }
 
@@ -474,10 +521,10 @@ void address_matcher_run (AddressMatcher* self, const char* name) {
 	GString* querystr;
 	notmuch_query_t* q;
 	notmuch_messages_t* msgs;
-	char** _tmp5_;
+	char** _tmp9_;
 	gint __result__size_;
 	gint _result__length1;
-	gint _tmp4_;
+	gint _tmp8_;
 	char** _result_;
 	g_return_if_fail (self != NULL);
 	self->priv->db = (_tmp0_ = notmuch_database_open (self->priv->user_db_path, NOTMUCH_DATABASE_MODE_READ_ONLY), _notmuch_database_close0 (self->priv->db), _tmp0_);
@@ -497,8 +544,21 @@ void address_matcher_run (AddressMatcher* self, const char* name) {
 		_g_free0 (_tmp3_);
 	}
 	q = notmuch_query_create (self->priv->db, querystr->str);
+	if (notmuch_query_count_messages (q) == 0) {
+		GString* _tmp4_;
+		notmuch_query_t* _tmp7_;
+		querystr = (_tmp4_ = g_string_new (""), _g_string_free0 (querystr), _tmp4_);
+		if (name != NULL) {
+			char* _tmp6_;
+			char* _tmp5_;
+			g_string_append (querystr, _tmp6_ = g_strconcat (_tmp5_ = g_strconcat ("from:", name, NULL), "*", NULL));
+			_g_free0 (_tmp6_);
+			_g_free0 (_tmp5_);
+		}
+		q = (_tmp7_ = notmuch_query_create (self->priv->db, querystr->str), _0 (q), _tmp7_);
+	}
 	msgs = notmuch_query_search_messages (q);
-	_result_ = (_tmp5_ = address_matcher_addresses_by_frequency (self, msgs, name, TRUE, &_tmp4_), _result__length1 = _tmp4_, __result__size_ = _result__length1, _tmp5_);
+	_result_ = (_tmp9_ = address_matcher_addresses_by_frequency (self, msgs, name, TRUE, &_tmp8_), _result__length1 = _tmp8_, __result__size_ = _result__length1, _tmp9_);
 	{
 		char** name_collection;
 		int name_collection_length1;
