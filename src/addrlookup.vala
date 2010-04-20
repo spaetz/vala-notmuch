@@ -45,9 +45,12 @@ class AddressMatcher {
 	public string frequent_fullname(HashTable<string,uint> frequencies) {
 		uint maxfreq = 0;
 		string fullname = null;
+
 		foreach (var mail in frequencies.get_keys()) {
 			uint freq = frequencies.lookup(mail);
-			if (freq > maxfreq) {
+			if ((freq > maxfreq && " " in mail) || (frequencies.size() == 1)) {
+				/* only use the entry if it has a real name */
+				/* or if this is the only entry */
 				maxfreq = freq;
 				fullname = mail;
 			}
