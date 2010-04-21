@@ -307,8 +307,8 @@ char** address_matcher_addresses_by_frequency (AddressMatcher* self, notmuch_mes
 	{
 		GRegex* _tmp1_;
 		GRegex* _tmp2_;
-		_tmp1_ = g_regex_new ("\\s*([^,]*<?(\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\" \
-"b)>?)", 0, 0, &_inner_error_);
+		_tmp1_ = g_regex_new ("\\s*((\\\"(\\\\.|[^\\\\\"])*\\\"|[^,])*" "<?(?P<mail>\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b)" \
+">?)", 0, 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
 				goto __catch2_g_regex_error;
@@ -343,7 +343,7 @@ char** address_matcher_addresses_by_frequency (AddressMatcher* self, notmuch_mes
 		g_clear_error (&_inner_error_);
 		return NULL;
 	}
-	headers = (_tmp4_ = (_tmp3_ = g_new0 (char*, 4 + 1), _tmp3_[0] = g_strdup ("from"), _tmp3_[1] = g_strdup ("to"), _tmp3_[2] = g_strdup ("cc"), _tmp3_[3] = g_strdup ("bcc"), _tmp3_), headers_length1 = 4, _headers_size_ = headers_length1, _tmp4_);
+	headers = (_tmp4_ = (_tmp3_ = g_new0 (char*, 4 + 1), _tmp3_[0] = g_strdup ("to"), _tmp3_[1] = g_strdup ("from"), _tmp3_[2] = g_strdup ("cc"), _tmp3_[3] = g_strdup ("bcc"), _tmp3_), headers_length1 = 4, _headers_size_ = headers_length1, _tmp4_);
 	while (TRUE) {
 		GMatchInfo* matches;
 		notmuch_message_t* msg;
@@ -382,7 +382,7 @@ char** address_matcher_addresses_by_frequency (AddressMatcher* self, notmuch_mes
 							break;
 						}
 						from = g_match_info_fetch (matches, 1);
-						addr = g_match_info_fetch (matches, 2);
+						addr = g_match_info_fetch_named (matches, "mail");
 						addr = (_tmp8_ = g_utf8_strdown (addr, -1), _g_free0 (addr), _tmp8_);
 						{
 							gboolean _tmp9_;
