@@ -82,7 +82,8 @@ class AddressMatcher {
 		 */
 		Regex re = null;
 		try {
-			re = new Regex("\\s*([^,]*<?(?P<mail>\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b)>?)");
+			re = new Regex("\\s*((\\\"(\\\\.|[^\\\\\"])*\\\"|[^,])*" +
+						   "<?(?P<mail>\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b)>?)");
 		} catch (GLib.RegexError ex) { }
 
 		string[] headers = {"to","from","cc","bcc"};
