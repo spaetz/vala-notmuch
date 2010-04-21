@@ -190,10 +190,10 @@ static gint address_matcher_sort_by_freq (AddressMatcherMailAddress_freq* mail1,
 		return result;
 	} else {
 		if ((*mail1).occurances > (*mail2).occurances) {
-			result = 1;
+			result = -1;
 			return result;
 		} else {
-			result = -1;
+			result = 1;
 			return result;
 		}
 	}
