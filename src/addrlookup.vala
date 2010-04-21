@@ -32,12 +32,12 @@ class AddressMatcher {
 		} catch (Error ex) {}
 	}
 
-	/* Used to sort the email addresses from least to most used */
+	/* Used to sort the email addresses from most to least used */
 	private static int sort_by_freq(MailAddress_freq* mail1, 
 									MailAddress_freq* mail2){
 		if (mail1->occurances == mail2->occurances) return 0;
-		else if (mail1->occurances > mail2->occurances) return 1;
-		else return -1;
+		else if (mail1->occurances > mail2->occurances) return -1;
+		else return 1;
 	}
 
 
