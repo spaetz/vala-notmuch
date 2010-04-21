@@ -82,55 +82,58 @@ class AddressMatcher {
 		 */
 		Regex re = null;
 		try {
-			re = new Regex("\\s*([^,]*<?(\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b)>?)");
+			re = new Regex("\\s*([^,]*<?(?P<mail>\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b)>?)");
 		} catch (GLib.RegexError ex) { }
 
-		/* fill the hashtable */
+		string[] headers = {"to","from","cc","bcc"};
+		/* go through all messages and fill the hashtable */
 		while (msgs.valid()) {
 			MatchInfo matches;
 			var msg = msgs.get();
-			var froms = (string)msg.get_header("to");
-			var found = re.match(froms, 0, out matches);
+			/* go through all defined headers */
+			foreach (string header in headers) {
+				var froms = (string)msg.get_header(header);
+				var found = re.match(froms, 0, out matches);
 
-			/* go through all mail addresses in this header */
-			while (found) {
-				var from = matches.fetch(1);
-				var addr = matches.fetch(2);
-				addr = addr.down();
+				/* go through all mail addresses in this header */
+				while (found) {
+					var from = matches.fetch(1);
+					var addr = matches.fetch_named("mail");
+					addr = addr.down();
 				
-				/* forward to next email address for the next while loop */
-				try { found = matches.next(); }
-				catch (RegexError ex) {}
+					/* forward to next email address for the next while loop */
+					try { found = matches.next(); }
+					catch (RegexError ex) {}
 
-				/* not all fetched addresses fit our search criteria,
-				*  so only use those that do, ie 'name' is a word beginning
-				*  in "real name <email@address>" */
-				var is_match =  Regex.match_simple ("\\b" + name,
+					/* not all fetched addresses fit our search criteria,
+					 *  so only use those that do, ie 'name' is a word beginning
+					 *  in "real name <email@address>" */
+					var is_match =  Regex.match_simple ("\\b" + name,
 													from,
 													RegexCompileFlags.CASELESS);
-				if (!is_match) continue;
+					if (!is_match) continue;
 
-				/* increase ht value by one for the lower case email */
-				uint occurs = ht.lookup(addr) +1 ;
-				ht.replace(addr, occurs);
+					/* increase ht value by one for the lower case email */
+					uint occurs = ht.lookup(addr) +1 ;
+					ht.replace(addr, occurs);
 
-				HashTable<string,uint> realname_freq = 
+					HashTable<string,uint> realname_freq = 
 					addr2realname.lookup(addr);
-				if (realname_freq == null) {
-					/* Create a new hashtable to insert */
-					realname_freq
-						= new HashTable<string,uint>.full(
-						GLib.str_hash, str_equal, null, null);
-					addr2realname.insert(addr, realname_freq);
-				}
+					if (realname_freq == null) {
+						/* Create a new hashtable to insert */
+						realname_freq
+						    = new HashTable<string,uint>.full(
+							  GLib.str_hash, str_equal, null, null);
+						addr2realname.insert(addr, realname_freq);
+					}
 				occurs = realname_freq.lookup(from) +1;
 				realname_freq.replace(from, occurs);
 
+				}
 			}
 			msg.destroy(); //get 'too many files open' if we don't destroy
 			msgs.move_to_next();
 		}
-
 		
 		/* SList with unique addresses (to be sorted after occurances)*/
 		var addrs = new SList<MailAddress_freq?>();
@@ -163,8 +166,17 @@ class AddressMatcher {
 			name = "";
 		if (this.user_primary_email != null)
 			querystr.append(" from:" + this.user_primary_email);
-
+		
 		var q = new Query.create(db, querystr.str);
+
+		if (q.count_messages() == 0) {
+			/* never sent this search a message, check all froms */
+			querystr = new StringBuilder ();
+			if (name != null)
+				querystr.append("from:"+name+"*");
+			q = new Query.create(db, querystr.str);
+		}
+
 		var msgs = q.search_messages();
 
 		/* actually retrieve and sort the addresses */
@@ -180,20 +192,3 @@ public static int main(string[] args) {
 	app.run(args[1]);
 	return 0;
 }
-
-
-//DEBUG SNIPPETS START HERE
-		/*
-		  var m =  db.find_message("test@test33");
-		  if (m == null)
-		  message("No such message");
-		  else
-		  message("path %s",m.get_thread_id());
-		*/
-		/*
-		  var tags = db.get_all_tags();
-		  while (tags.valid()) {
-		  var tag = tags.get();
-		  message("tag %s",tag);
-		  tags.move_to_next();
-		  }*/
