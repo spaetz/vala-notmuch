@@ -230,8 +230,8 @@ class AddressMatcher {
 
 		/* actually retrieve and sort the addresses */
 		var result = this.search_address_passes(queries, name);
-		foreach (string name in result) {
-			stdout.printf("%s\n", name); 
+		foreach (string addr in result) {
+			stdout.printf("%s\n", addr); 
 		}
 	}
 } /*End of class AddressMatcher*/
