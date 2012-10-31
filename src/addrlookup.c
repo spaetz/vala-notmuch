@@ -804,12 +804,14 @@ void address_matcher_run (AddressMatcher* self, const gchar* name) {
 	gchar** _result_;
 	gint _result__length1;
 	gint __result__size_;
+	notmuch_status_t status;
+
 	g_return_if_fail (self != NULL);
 	_tmp0_ = g_new0 (notmuch_query_t*, 0);
 	queries = _tmp0_;
 	queries_length1 = 0;
 	_queries_size_ = 0;
-	_tmp1_ = notmuch_database_open (self->priv->user_db_path, NOTMUCH_DATABASE_MODE_READ_ONLY);
+	status = notmuch_database_open (self->priv->user_db_path, NOTMUCH_DATABASE_MODE_READ_ONLY, &_tmp1_);
 	_notmuch_database_close0 (self->priv->db);
 	self->priv->db = _tmp1_;
 	_tmp2_ = g_strconcat ("tag:", self->priv->user_addrbook_tag, NULL);
